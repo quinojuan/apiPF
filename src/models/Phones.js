@@ -14,14 +14,6 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
       allowNull: true,
     },
-    category: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    brand: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
     operative_system: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -48,6 +40,10 @@ module.exports = (sequelize) => {
     },
     frontal_camera: {
       type: DataTypes.FLOAT,
+      allowNull: false,
+    },
+    colors:{
+      type: DataTypes.ARRAY(DataTypes.STRING),
       allowNull: false,
     },
     weight: {
