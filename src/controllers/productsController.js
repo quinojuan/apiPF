@@ -3,15 +3,15 @@ const { Phones, Brand} = require('../db');
 // -------------------- GET ALL --------------------
 
 const getAllProducts = async (req, res) => {
-  try {
-    const { ram, brand, name, capacity } = req.query;
-    const allPhones = await Phones.findAll({
-      include: [
-        {
-          model: Brand,
-        },
-      ],
-    });
+	try {
+		const { ram, brand, name, capacity } = req.query;
+		const allPhones = await Phones.findAll(( {
+			include: [
+			  {
+				model: Brand,
+			  },
+			],
+		  }));
 
 		let presentacion = allPhones.map(({	
 			id,
@@ -30,7 +30,10 @@ const getAllProducts = async (req, res) => {
 			image,
 			cpu,
 			description,
-			Brands})=>{
+			Brands,
+			stock,
+			active,
+		})=>{
 			return  {
 				id,
 				model,
@@ -48,7 +51,9 @@ const getAllProducts = async (req, res) => {
 				image,
 				cpu,
 				description,
-				brand: Brands[0].name
+				brand: Brands[0].name,
+				stock,
+				active
 			}
 		})
 		
@@ -82,32 +87,28 @@ const getAllProducts = async (req, res) => {
 	}
 };
 
-const getPhonesById = async (req, res) => {
-  try {
-    const { id } = req.params;
-    if (!id) res.ratus(404).json({ message: "id is not provided" });
-    const validation = await Phones.findByPk(id);
-    res.status(200).json(validation);
-  } catch (e) {
-    console.log(e);
-    res.status(500).json({ message: "Server error" });
-  }
-};
+// -------------------- PHONES --------------------
 
-const deletePhoneById = async (req, res) => {
-  const { phoneId } = req.params;
-  try {
-    const phone = await Phones.findByPk(phoneId);
-    await phone.destroy({
-      where: {
-        id: phoneId,
-      },
-    });
-    if (!phone) return res.status(404).json({ message: "Phone not found" });
-    return res.json(`${phone.model} deleted`);
-  } catch (error) {
-    return res.status(500).json({ message: "Server error" });
-  }
+/* const getAllPhones = async (req, res) => {
+	try {
+		const allPhones = await Phones.findAll();
+		return res.status(200).json(allPhones);
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ message: 'Server error' });
+	}
+}; */
+
+const getPhonesById = async (req, res) => {
+	try {
+		const { id } = req.params;
+		if (!id) res.ratus(404).json({ message: 'id is not provided' });
+		const validation = await Phones.findByPk(id);
+		res.status(200).json(validation);
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ message: 'Server error' });
+	}
 };
 
 const postPhone = async (req, res) => {
@@ -148,8 +149,7 @@ const postPhone = async (req, res) => {
 			price &&
 			image &&
 			cpu &&
-			description &&
-			colors
+			description 
 		) {
 			const validation = await Phones.findOne({ where: { model: model } });
 			if (validation === null) {
@@ -164,8 +164,8 @@ const postPhone = async (req, res) => {
 					capacity,
 					frontal_camera,
 					weight,
-					colors,
 					battery,
+					colors,
 					price,
 					image,
 					cpu,
@@ -204,7 +204,7 @@ const postPhone = async (req, res) => {
 					brand: phoneWithBrand.Brands[0].name
 				}
 				//erik cuando veas esto, y digas "KE HORRIBLE KE ASKO", 
-				//bueno, tenes razon. es horrible. pero funca xd te amamos, los del back <3
+				//bueno, tenes razon. es horrible. pero funca xd te amamos, los del back ❤️
 				presentacion
 					? res.status(201).json(presentacion)
 					: res.status(404).json({ message: 'Error /post product' });
@@ -220,10 +220,29 @@ const postPhone = async (req, res) => {
 	}
 };
 
+const updatePhone = async (req, res)=>{
+	try {
+        const { id } = req.params;
+        
+		//console.log(id, "IDDD")
+       //console.log(req.body, "BODY")
+       let [updatePhone]= await Phones.update(req.body,{where: {id}})
+      // console.log(updatePhone, "updatePhone")
+       if(updatePhone){
+           res.status(201).json(updatePhone)
+       } else{
+           res.status(404).json({message: 'Error /put updatePhone'})
+       }
+   } catch (e) {
+       console.log(e);
+       res.status(500).json({message: 'Error missing info'})
+   }
+}
 
 
 module.exports = {
-  getAllProducts,
-  getPhonesById,
-  postPhone,
+	getAllProducts,
+	getPhonesById,
+	postPhone,
+	updatePhone
 };

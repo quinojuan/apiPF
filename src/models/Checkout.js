@@ -4,7 +4,7 @@ const { DataTypes } = require("sequelize");
 module.exports = (sequelize) => {
   // defino el modelo
   sequelize.define(
-    "Brand",
+    "Checkout",
     {
       id:{
         type: DataTypes.UUID,
@@ -12,13 +12,20 @@ module.exports = (sequelize) => {
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4,
       },
-      name:{
+      transaction :{
         type: DataTypes.STRING,
         allowNull: false
       },
+      amount:{
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      status:{
+        type: DataTypes.STRING,
+        allowNull: false
+      }
       },
     {
-      timestamps: false,
       freezeTableName: true, 
     }
   );

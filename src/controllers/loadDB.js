@@ -1,16 +1,16 @@
-const { Phones, Brand } = require("../db"); // requiero el modelo
-const data = require("../JSONFINALFINAL.json"); // me traigo el Json
-const { relacionarPreciosCapacidad } = require("../helpers");
+const { Phones, Brand } = require('../db'); // requiero el modelo
+const data = require('../JSONFINALFINAL.json'); // me traigo el Json
+const { relacionarPreciosCapacidad } = require('../helpers');
 
 const loadDb = async () => {
 	try {
+		//TELEFONOS
 		let allPhones = data.filter((art) =>
 			art.category === 'Phones'
 				? {
 						// filtro por la categoría y en las que coinciden armo un objeto con las propiedades para que coincidan con el modelo
 						category: art.category,
 						model: art.model,
-						colors: art.colors,
 						operative_system: art.operative_system,
 						size: art.size,
 						inches: art.inches,
