@@ -1,40 +1,20 @@
-const { Phones, Brand} = require('../db');
+const { Phones, Brand } = require('../db');
 
 // -------------------- GET ALL --------------------
 
 const getAllProducts = async (req, res) => {
 	try {
 		const { ram, brand, name, capacity } = req.query;
-		const allPhones = await Phones.findAll(( {
+		const allPhones = await Phones.findAll({
 			include: [
-			  {
-				model: Brand,
-			  },
+				{
+					model: Brand,
+				},
 			],
-		  }));
+		});
 
-		let presentacion = allPhones.map(({	
-			id,
-			model,
-			colors,
-			operative_system,
-			size,
-			inches,
-			main_camera,
-			ram,
-			capacity,
-			frontal_camera,
-			weight,
-			battery,
-			price,
-			image,
-			cpu,
-			description,
-			Brands,
-			stock,
-			active,
-		})=>{
-			return  {
+		let presentacion = allPhones.map(
+			({
 				id,
 				model,
 				colors,
@@ -51,12 +31,34 @@ const getAllProducts = async (req, res) => {
 				image,
 				cpu,
 				description,
-				brand: Brands[0].name,
+				Brands,
 				stock,
-				active
+				active,
+			}) => {
+				return {
+					id,
+					model,
+					colors,
+					operative_system,
+					size,
+					inches,
+					main_camera,
+					ram,
+					capacity,
+					frontal_camera,
+					weight,
+					battery,
+					price,
+					image,
+					cpu,
+					description,
+					brand: Brands[0].name,
+					stock,
+					active,
+				};
 			}
-		})
-		
+		);
+		presentacion = presentacion.filter((phones) => phones.active === true);
 		if (req.query) {
 			if (ram) {
 				presentacion = presentacion.filter((product) =>
@@ -104,6 +106,8 @@ const getPhonesById = async (req, res) => {
 		const { id } = req.params;
 		if (!id) res.ratus(404).json({ message: 'id is not provided' });
 		const validation = await Phones.findByPk(id);
+		if (validation.active === false)
+			return res.status(400).json({ message: 'phone not active' });
 		res.status(200).json(validation);
 	} catch (e) {
 		console.log(e);
@@ -133,7 +137,7 @@ const postPhone = async (req, res) => {
 			cpu,
 			description,
 		} = req.body;
-		
+
 		if (
 			category &&
 			model &&
@@ -149,7 +153,7 @@ const postPhone = async (req, res) => {
 			price &&
 			image &&
 			cpu &&
-			description 
+			description
 		) {
 			const validation = await Phones.findOne({ where: { model: model } });
 			if (validation === null) {
@@ -172,19 +176,19 @@ const postPhone = async (req, res) => {
 					description,
 				});
 
-				let brandId = await Brand.findOne({ where: { name: brand, } })
-                //console.log(newPhone, "PHONEE")
+				let brandId = await Brand.findOne({ where: { name: brand } });
+				//console.log(newPhone, "PHONEE")
 				//console.log(brandId.dataValues.id,"ID??????")
-				await newPhone.addBrand(brandId.dataValues.id)
+				await newPhone.addBrand(brandId.dataValues.id);
 				const phoneWithBrand = await Phones.findByPk(newPhone.id, {
 					include: [
-					  {
-						model: Brand,
-					  },
+						{
+							model: Brand,
+						},
 					],
-				  });
-				  //phoneWithBrand = phoneWithBrand.Brands[0].name
-				 let presentacion = {
+				});
+				//phoneWithBrand = phoneWithBrand.Brands[0].name
+				let presentacion = {
 					category,
 					model,
 					operative_system,
@@ -201,10 +205,10 @@ const postPhone = async (req, res) => {
 					image,
 					cpu,
 					description,
-					brand: phoneWithBrand.Brands[0].name
-				}
-				//erik cuando veas esto, y digas "KE HORRIBLE KE ASKO", 
-				//bueno, tenes razon. es horrible. pero funca xd te amamos, los del back ❤️
+					brand: phoneWithBrand.Brands[0].name,
+				};
+				//erik cuando veas esto, y digas "KE HORRIBLE KE ASKO",
+				//bueno, tenes razon. es horrible. pero funca xd te amamos, los del back <3
 				presentacion
 					? res.status(201).json(presentacion)
 					: res.status(404).json({ message: 'Error /post product' });
@@ -220,29 +224,42 @@ const postPhone = async (req, res) => {
 	}
 };
 
-const updatePhone = async (req, res)=>{
+const updatePhone = async (req, res) => {
 	try {
-        const { id } = req.params;
-        
-		//console.log(id, "IDDD")
-       //console.log(req.body, "BODY")
-       let [updatePhone]= await Phones.update(req.body,{where: {id}})
-      // console.log(updatePhone, "updatePhone")
-       if(updatePhone){
-           res.status(201).json(updatePhone)
-       } else{
-           res.status(404).json({message: 'Error /put updatePhone'})
-       }
-   } catch (e) {
-       console.log(e);
-       res.status(500).json({message: 'Error missing info'})
-   }
-}
+		const { id } = req.params;
 
+		//console.log(id, "IDDD")
+		//console.log(req.body, "BODY")
+		let [updatePhone] = await Phones.update(req.body, { where: { id } });
+		// console.log(updatePhone, "updatePhone")
+		if (updatePhone) {
+			res.status(201).json(updatePhone);
+		} else {
+			res.status(404).json({ message: 'Error /put updatePhone' });
+		}
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ message: 'Error missing info' });
+	}
+};
+
+const deletePhone = async (req, res) => {
+	try {
+		const { id } = req.params;
+		let [deletePhone] = await Phones.update({ active: 0 }, { where: { id } });
+		if (!deletePhone)
+			return res.status(404).json({ message: 'phone not found' });
+		res.status(200).json({ message: 'phone deleted' });
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ message: 'Server Error' });
+	}
+};
 
 module.exports = {
 	getAllProducts,
 	getPhonesById,
 	postPhone,
-	updatePhone
+	updatePhone,
+	deletePhone,
 };

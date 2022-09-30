@@ -9,6 +9,7 @@ const capacitiesRouter = require('./capacityRouter.js');
 const purchasesRouter = require('./purchasesRouter.js')
 const checkoutRouter = require('./checkoutRouter.js');
 const feedbacksRouter = require('./feedbacksRouter.js');
+const qasRouter = require('./qasRouter.js')
 const router = Router();
 
 // Configurar los routers
@@ -22,4 +23,5 @@ router.use('/purchases', purchasesRouter);
 router.use('/users', usersRouter);
 router.use('/feedbacks', feedbacksRouter);
 router.use('/checkout', checkoutRouter);
+router.use('/qas', qasRouter)
 module.exports = router;

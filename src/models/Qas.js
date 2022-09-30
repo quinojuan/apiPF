@@ -4,7 +4,7 @@ const { DataTypes } = require('sequelize');
 module.exports = (sequelize) => {
 	// defino el modelo
 	sequelize.define(
-		'Purchases',
+		'Qas',
 		{
 			id: {
 				type: DataTypes.UUID,
@@ -12,29 +12,13 @@ module.exports = (sequelize) => {
 				primaryKey: true,
 				defaultValue: DataTypes.UUIDV4,
 			},
-			
-			dni: {
-				type: DataTypes.STRING,
-				allowNull: false,
-			},
-			adress: {
-				type: DataTypes.STRING,
-				allowNull: false,
-			},
-			birthday: {
-				type: DataTypes.STRING,
-				allowNull: false,
-			},
-			amount:{
-				type: DataTypes.INTEGER,
-			     
-			},
-		 	 id_transaction:{
-				type: DataTypes.TEXT,
-				unique: true,
-				
-			  }, 
-		
+			questions:{
+                type: DataTypes.TEXT,
+                allowNull: false,
+            },
+            answers:{
+                type: DataTypes.TEXT
+            }
 		},
 		{
 			freezeTableName: true,
