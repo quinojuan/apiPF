@@ -135,15 +135,14 @@ const purchaseMail = async (req, res) => {
 	  to: email, // capturo el mail que me llega por body
 	  subject: "Gracias por tu compra!",
 	  html: `<h1>Gracias por tu compra</h1>
-			  <img src="cid:sameValue"/>
 			  <h4>Esperamos que disfrutes del producto por un costo de $ ${amount} que adquiriste</h4>
 			  <p>El mismo te va a llegar en los proximos días a la dirección: ${adress}</p>
 			  <h5>Gracias por confiar en nosotros</h5>`,
-	  attachments: [{
-		filename: "logo.Movil-Gates.png",
-		path: "../client/src/images/logo.Movil-Gates.png",
-		cid: "sameValue" // cid (unique identifier of the file) which is a reference to the attachment file
-	  }]
+	  // attachments: [{
+		// filename: "logo.Movil-Gates.png",
+		// path: "../client/src/images/logo.Movil-Gates.png",
+		// cid: "sameValue" // cid (unique identifier of the file) which is a reference to the attachment file
+	  // }]
 	}
 	
 	transporter.sendMail(mailOptions, (error, info)=> {
