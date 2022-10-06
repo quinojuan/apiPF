@@ -1,6 +1,11 @@
 const admin = require("firebase-admin");
 
-const auth = admin.initializeApp().auth();
+var serviceAccount = require("src\firebase.json");
+
+const auth = admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://proyecto-e64bf-default-rtdb.firebaseio.com"
+}).auth();
 
 const getAllUsersFromFirebase = async (req, res) => {
   try {
