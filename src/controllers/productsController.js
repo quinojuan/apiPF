@@ -177,6 +177,10 @@ const postPhone = async (req, res) => {
 				});
 
 				let brandId = await Brand.findOne({ where: { name: brand } });
+				if (!brandId) {
+					await Brand.create({ name: brand });
+					brandId = await Brand.findOne({ where: { name: brand } });
+				}
 				//console.log(newPhone, "PHONEE")
 				//console.log(brandId.dataValues.id,"ID??????")
 				await newPhone.addBrand(brandId.dataValues.id);

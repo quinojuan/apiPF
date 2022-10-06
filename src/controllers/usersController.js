@@ -5,21 +5,38 @@ const getAllUsers = async (req, res) => {
 	try {
 		let allUsers = await Users.findAll();
 		// if(allUsers.length === 0) return res.status(404).json({message: "cannot find info in database"});
-		allUsers = allUsers.filter((users) => users.active === true);
+		// allUsers = allUsers.filter((users) => users.active === true); // esta validación entra en conflicto con el bannear usuarios. Dejarla comentada
 		res.status(200).json(allUsers);
 	} catch (e) {
 		console.log(e);
-		res.ratus(500).json({ message: 'Server error' });
+		res.status(500).json({ message: 'Server error' });
 	}
 };
 
 const getUserById = async (req, res) => {
 	try {
 		const { id } = req.params;
-		if (!id) res.ratus(404).json({ message: 'id is not provided' });
+		if (!id) res.status(404).json({ message: 'id is not provided' });
 		const validation = await Users.findByPk(id);
 		if (!validation) {
 			res.status(404).json({ message: 'id not exists' });
+		}
+		// if (validation.active === false) esta validación entra en conflicto con el bannear usuarios. Dejarla comentada
+		// 	return res.status(400).json({ message: 'user not active' });
+		res.status(201).json(validation);
+	} catch (e) {
+		console.log(e);
+		res.status(500).json({ message: 'Server error' });
+	}
+};
+
+const getUserByEmail = async (req, res) => {
+	try {
+		const { email } = req.params;
+		if (!email) return res.status(200).json({ name: 'Usuario' });
+		const validation = await Users.findOne({ where: { email: email } });
+		if (!validation) {
+			return res.status(200).json({ name: 'Usuario' });
 		}
 		if (validation.active === false)
 			return res.status(400).json({ message: 'user not active' });
@@ -32,18 +49,19 @@ const getUserById = async (req, res) => {
 
 const createUser = async (req, res) => {
 	try {
-		let { email } = req.body;
-		//console.log(req.body, "bodyyy")
+		let { name, password, email } = req.body; // desestructuro un obj con propiedades anidadas
+		if(!name) name = ""
+		let passwordHash = bCrypt.hashSync(password, 10);
 		if (!email) return res.status(404).json({ message: 'id is not provided' });
 
-		const validation = await Users.findOne({ where: { email: email } });
+		const validation = await Users.findOne({ where: { email } });
 		if (validation) {
 			return res.status(404).json({ message: 'user already exists' });
 		} else {
-			//aca se hashea la clave
-			// password = bCrypt.hashSync(password, 10)
-			const newUser = await Users.findOrCreate({ where: { email } });
-			return res.status(201).json({ message: `${newUser.email} created! :D` });
+			const newUser = await Users.findOrCreate({
+				where: { name, email, password: passwordHash },
+			});
+			return res.status(201).json({ message: `${email} created! :D` });
 		}
 	} catch (e) {
 		console.log(e);
@@ -88,4 +106,5 @@ module.exports = {
 	createUser,
 	updateUser,
 	deleteUser,
+	getUserByEmail
 };

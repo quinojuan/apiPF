@@ -15,14 +15,23 @@ const getAllQas = async (req, res) => {
 			],
 		  }))
 		let presentacion = allQas.map(({id, questions, answers, Phones, Users})=>{
-			console.log(Users)
-			return {
-				id,
-				questions,
-                answers,
-				email: Users[0].email,
-				product: Phones[0].model
+			if(!answers){
+				return {
+					id,
+					questions,
+					email: Users[0].email,
+					product: Phones[0].model
+				}
+			}else{
+				return {
+					id,
+					questions,
+					answers,
+					email: Users[0].email,
+					product: Phones[0].model
+				}
 			}
+			
 		})
 		presentacion
 		?res.status(201).json(presentacion)
@@ -37,9 +46,9 @@ const getAllQas = async (req, res) => {
 	 try {
 		 const { id } = req.params;
 		 console.log(id, "IDDD")
-		//console.log(req.body, "BODY")
+		 console.log(req.body, "BODY")
 		let [qa] = await Qas.update(req.body, {where: {id}})
-		console.log(qa, "FEED")
+		//console.log(qa, "FEED")
 		if(qa){
 			res.status(201).json(qa)
 		} else{
@@ -64,7 +73,7 @@ const getAllQas = async (req, res) => {
 		  })
           
 		  let myUser = await Users.findOne({ where: { email: email } })
-		  
+		
 		  await newQa.addUsers(myUser.dataValues.id)
 		  const qaWithUser = await Qas.findByPk(newQa.id,{
 			  include:[{
