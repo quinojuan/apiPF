@@ -1,8 +1,10 @@
-const { Purchases, Users, Phones } = require("../db.js");
+const { Purchases, Users, Phones, Quantities } = require("../db.js");
 const nodemailer = require("nodemailer");
 
 
+
 const getAllPurchases = async (req, res) => {
+  //falta devolver la quantiy
   try {
     const allPurchases = await Purchases.findAll({
       include: [
@@ -14,18 +16,47 @@ const getAllPurchases = async (req, res) => {
           model: Users,
           attributes: ["email"],
         },
+        {
+          model: Quantities,
+        }
       ],
     });
-
     let presentacion = allPurchases.map(
-      ({ dni, adress, birthday, amount, Users, Phones }) => {
+      ({ dni, adress, birthday, amount, Users, Phones, id, id_transaction, Quantities }) => {
+        let productPresent = []
+        for(let j = 0; j<Quantities.length;j++){
+        for(let i = 0; i<Phones.length; i++){
+          if(Phones[i].PhonePurchases.PurchasesId === Quantities[j].PurchasesQuantities.PurchasesId){
+           let productWithQuantity = {
+             phone: Phones[i].model,
+             quantity: Quantities[i].quantity
+            }
+            if(!productPresent.includes(productWithQuantity)){
+              productPresent.push(productWithQuantity)
+            }
+          } 
+        }
+      }
+     //este es el momento que me multiplica los productos por cada relacion en la pegada.
+     //entonces lo que sigue es basicamente una limpieza de los elementos repetidos
+      let productsMap = productPresent.map(item=>{
+          return [item.phone,item]
+      });
+      var productsMapArr = new Map(productsMap); // Pares de clave y valor
+      
+      let productsClean = [...productsMapArr.values()]; // Conversión a un array
+      //hasta aca xd
+      console.log(productsClean);
+
         return {
+          id,
+          id_transaction,
           dni,
           adress,
           birthday,
           amount,
           email: Users[0].email,
-          products: Phones[0].model,
+          products: productsClean,
         };
       }
     );
@@ -43,16 +74,27 @@ const postPurchase = async (req, res) => {
   try {
     const { dni, adress, birthday, amount, email, products, transaction } =
       req.body;
-    let newPurchase = await Purchases.create({
+
+      let newPurchase = await Purchases.create({
+        dni,
+        adress,
+        birthday,
+        amount,
+        id_transaction: transaction,
+      }); 
+     
+    
+    let presentacion = {
       dni,
       adress,
       birthday,
       amount,
       id_transaction: transaction,
-    });
-    //console.log(req.body, "a ver que llega por body")
-    //console.log(newPurchase, "LA COMPRITA")
+      email: email,
+      products: [],
+    };
 
+    //Relacion con user:
     let myUser = await Users.findOne({ where: { email: email } });
     await newPurchase.addUsers(myUser.dataValues.id);
     const purchaseWithUser = await Purchases.findByPk(newPurchase.id, {
@@ -62,51 +104,49 @@ const postPurchase = async (req, res) => {
         },
       ],
     });
-    // console.log(myUser.dataValues, "UUUSER")
-
-    let presentacion = {
-      dni,
-      adress,
-      birthday,
-      amount,
-      id_transaction: transaction,
-      email: purchaseWithUser.Users[0].email,
-      products: [],
-    };
-
-    const promises = products.map((p) => {
+   
+    
+    //Relacion con phones:
+    const promisesPhones = products.map((p) => {
       return new Promise(async (resolve, reject) => {
         let myPhone = await Phones.findOne({ where: { model: p.phone.model } });
         await newPurchase.addPhones(myPhone.dataValues.id);
-        //preguntarle a req.body.products cuantas veces enviaron el mismo product
-        //en base a la cantidad de ese product, updatear el stock en BD
         myPhone = {
           ...myPhone.dataValues,
           stock: myPhone.dataValues.stock - p.quantity,
         };
         await Phones.update(myPhone, { where: { id: myPhone.id } });
-
-        //aca habria que descontarle del stock a dicho phone por cada quantity del producto en la compra
-        const purchaseWithPhone = await Purchases.findByPk(newPurchase.id, {
+      
+        const purchaseWithPhone = await Purchases.findByPk(newPurchase.id,   {
           include: [
             {
               model: Phones,
             },
           ],
-        });
+        } );
         resolve(presentacion.products.push(purchaseWithPhone));
         reject((err) => console.log(err));
       });
     });
-    await Promise.all(promises);
+    await Promise.all(promisesPhones);
 
-    /*    let myPhone = await Phones.findOne({where:{ model: products[0].model}})
-	    await newPurchase.addPhones(myPhone.dataValues.id)
-	    const purchaseWithPhone = await Purchases.findByPk(newPurchase.id,{
-		  include:[{
-			model: Phones
-		   }]
-	     }) */
+
+
+    //relacion con quantities
+    
+    const promisesQuantities = products.map((q) => {
+      return new Promise(async (resolve, reject) => {
+        let myPhone2 = await Phones.findOne({ where: { model: q.phone.model } })
+        let quan = await Quantities.findOne({where:{quantity: q.quantity}})
+          await myPhone2.addQuantities(quan.dataValues.id)
+          await newPurchase.addQuantities(quan.dataValues.id)
+        resolve(presentacion.products.push(quan));
+        reject((err) => console.log(err));
+      });
+    });
+    await Promise.all(promisesQuantities); 
+  
+
 
     res.status(200).json(presentacion);
   } catch (e) {
@@ -135,14 +175,15 @@ const purchaseMail = async (req, res) => {
 	  to: email, // capturo el mail que me llega por body
 	  subject: "Gracias por tu compra!",
 	  html: `<h1>Gracias por tu compra</h1>
+			  <img src="cid:sameValue"/>
 			  <h4>Esperamos que disfrutes del producto por un costo de $ ${amount} que adquiriste</h4>
 			  <p>El mismo te va a llegar en los proximos días a la dirección: ${adress}</p>
 			  <h5>Gracias por confiar en nosotros</h5>`,
-	  // attachments: [{
-		// filename: "logo.Movil-Gates.png",
-		// path: "../client/src/images/logo.Movil-Gates.png",
-		// cid: "sameValue" // cid (unique identifier of the file) which is a reference to the attachment file
-	  // }]
+	  attachments: [{
+		filename: "logo.Movil-Gates.png",
+		path: "../client/src/images/logo.Movil-Gates.png",
+		cid: "sameValue" // cid (unique identifier of the file) which is a reference to the attachment file
+	  }]
 	}
 	
 	transporter.sendMail(mailOptions, (error, info)=> {

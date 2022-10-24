@@ -37,10 +37,10 @@ const getAllFeedbacks = async (req, res) => {
  const updateFeedback = async (req, res) => {
 	 try {
 		 const { id } = req.params;
-		 console.log(id, "IDDD")
+		// console.log(id, "IDDD")
 		//console.log(req.body, "BODY")
 		let [feedback] = await Feedbacks.update(req.body, {where: {id}})
-		console.log(feedback, "FEED")
+		//console.log(feedback, "FEED")
 		if(feedback){
 			res.status(201).json(feedback)
 		} else{
@@ -61,7 +61,7 @@ const postFeedback = async (req, res) => {
 			email,
 			model
 		} = req.body;
-		if(comment && title && points){
+		if(comment && points){
           const newFeedback = await Feedbacks.create({
 			comment,
 			title,
@@ -85,8 +85,8 @@ const postFeedback = async (req, res) => {
 			  model: Phones
 			 }]
 		   }) 
-		   console.log(feedbackWithUser,"feedbackWithUser")
-		   console.log(feedbackWithPhone,"feedbackWithPhone")
+		  // console.log(feedbackWithUser,"feedbackWithUser")
+		  // console.log(feedbackWithPhone,"feedbackWithPhone")
 
 
 		   let presentacion = {

@@ -43,7 +43,7 @@ sequelize.models = Object.fromEntries(capsEntries);
 
 // En sequelize.models están todos los modelos importados como propiedades
 // Para relacionarlos hacemos un destructuring
-const { Brand, Phones, Users, Purchases, Feedbacks } = sequelize.models;
+const { Brand, Phones, Users, Purchases, Feedbacks, Qas, Quantities } = sequelize.models;
 /*
 
 Faltarían las relaciones de Feedbacks
@@ -55,6 +55,11 @@ Feedbacks.belongsToMany(Phones, { through: 'PhoneFeedbacks', foreignKey: 'Feedba
 Phones.belongsToMany(Feedbacks, { through: 'PhoneFeedbacks', foreignKey: 'PhoneId' });
 Feedbacks.belongsToMany(Users, { through: 'UsersFeedbacks', foreignKey: 'FeedbacksId' });
 Users.belongsToMany(Feedbacks, { through: 'UsersFeedbacks', foreignKey: 'UsersId' });
+
+Qas.belongsToMany(Phones, { through: 'PhoneQas', foreignKey: 'QasId' });
+Phones.belongsToMany(Qas, { through: 'PhoneQas', foreignKey: 'PhoneId' });
+Qas.belongsToMany(Users, { through: 'UsersQas', foreignKey: 'QasId' });
+Users.belongsToMany(Qas, { through: 'UsersQas', foreignKey: 'UsersId' });
 
 Brand.belongsToMany(Phones, { through: 'PhoneBrand', foreignKey: 'BrandId' });
 Phones.belongsToMany(Brand, { through: 'PhoneBrand', foreignKey: 'PhoneId' });
@@ -74,6 +79,11 @@ Phones.belongsToMany(Purchases, {
 	through: 'PhonePurchases',
 	foreignKey: 'PhonesId',
 });
+
+Quantities.belongsToMany(Phones, { through: 'PhoneQuantities', foreignKey: 'QuantitiesId' });
+Phones.belongsToMany(Quantities, { through: 'PhoneQuantities', foreignKey: 'PhoneId' });
+Quantities.belongsToMany(Purchases, { through: 'PurchasesQuantities', foreignKey: 'QuantitiesId' });
+Purchases.belongsToMany(Quantities, { through: 'PurchasesQuantities', foreignKey: 'PurchasesId' });
 
 // Aca vendrian las relaciones
 // Product.hasMany(Reviews);
