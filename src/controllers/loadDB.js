@@ -59,7 +59,7 @@ const loadDb = async () => {
       await phone.addBrand(brandId.dataValues.id);
     }
 
-    let usersAxios = await axios.get("https://api-movilgates.herokuapp.com/firebase/allusers");
+    let usersAxios = await axios.get("http://localhost:3001/firebase/allusers");
     let users = usersAxios.data.users;
     for (let i = 0; i < users.length; i++) {
       //console.log(users[i].email, "EMAILS???")
